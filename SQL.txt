@@ -1,0 +1,411 @@
+https://www.youtube.com/watch?v=7S_tz1z_5bA
+
+SELECT *
+FROM CUSTOMERS
+WHERE FIRST_NAMES REGEXP 'ELKA' OR NAMES 'AMBUR'  REGEXP <- THIS IS LIKE % BUT WORKS FOR ANYWHERE
+
+SELECT *
+FROM CUSTOMERS
+WHERE LAST_NAMES 'EY$|ON$'  | <- THIS is like or   and $ means at the end of the string
+
+SELECT *
+FROM CUSTOMERS 
+WHERE FIRST_NAMES '^MY|SE'  <- ^ MEANS THE BEGINNING OF THE STRING
+
+
+SELECT ORDER_ID, OI.PRODUCT_ID, OI.UNIT_PRICE <- HAVE TO PREFIX BECAUSE IT EXISTS IN BOTH TABLES
+FROM ORDER_ITEMS OI <- OI IS AN ALIAS
+JOIN PRODUCT_ID P <- P IS AN ALIAS
+	ON OI.PRODUCT_ID = P.PRODUCT_ID
+
+notes:
+inner join: will only display what items are matching for whatever query you're displaying
+ex: if you have a country id and that country has states, if you do an INNER JOIN on the countrytbl
+with the countryid and then do ON statetbl.countryid it will display those states of the country ID
+
+it shows data that has matching entries in both tables
+
+OUTER JOINS:
+
+LEFT JOIN: it will display all items initally called so if you call tblCountry it will display those on the left
+and it will display everything with a matching number from countryID if you select ON .countryid
+
+
+RIGHT join: its the inverse of the left, it will simply print the inverse of the LEFT JOIN so
+ex: if there is a country without a state, but a state without a matching country it will display the state
+if you're calling from the countryID
+
+FULL OUTER JOIN: its a combination of all of them, shows the matching and non matching records from the 
+left and right table so if california is in the list but the countries are indian then it will display null for
+the country cause it doesnt have a matching ID
+
+
+SELECT *                   <-------------------this is how you multi join columns
+	p.date,
+	p.invoice_id,
+	p.amount,
+	c.name,
+	pm.name
+FROM payments p
+JOIN clients c       
+	ON p.client_id = c.client_id
+JOIN payment_methods pm
+	ON p.payment_method = pm.payment_method_id
+
+
+------------------ compound join condition (multiple conditions to join the two tables
+SELECT *
+FROM order_items oi
+JOIN order_item_notes oin
+	ON oi.order_id = oin.order_id
+	AND oi.product_id = oin.product_id
+
+
+
+
+
+SELECT *
+FROM products p
+LEFT JOIN order_ITEMS oi
+	ON p.product_id = oi.order_id
+
+a left join will produce all the products in the products table whether or not
+the ON statement is true. so even if there is no product from order Id itll still 
+display the product
+
+SELECT 
+	o.order_id,
+	o.order_date,
+	c.first_name AS customer
+	sh.name AS shipper,
+	os.name AS status,
+from orders o
+JOIN customer c
+	on o.customer_id = c.customer_id
+LEFT JOIN shippers sh
+	ON o.shipper_id = sh.shipper_id
+JOIN order_statuses os
+	ON o.status = os.order_status_id
+ORDER BY o.order_date
+
+
+NOTE: cant use using if there is another table with that specific key word ----------------------
+
+SELECT *
+	p.date,
+	c.name AS client,
+	pm.name AS payment_method <---- THIS WILL GIVE CREDITCARD OR CASH
+FROM payments p
+join clients c USING (client id)
+JOIN payment_methods pm
+	ON p.payment_method = pm.payument_method_id
+
+<--NATURAL JOINS -->
+!NOT RECCOMMENDED
+
+// this will join based on the common columns (the columns with the same names)
+
+SELECT 
+	o.order_id,
+	c.first_name
+FROM orders o
+NATURAL JOIN customers c
+
+
+<---- CROSS JOINS--->
+JOIN EVERY RECORD IN THE FIRST TABLE WITH EVERY RECORD IN THE SECOND TABLE
+
+SELECT 
+	c.first_name AS customer,
+	p.name AS product
+FROM customers c
+CROSS JOIN products p <--- customer will join with every record in products
+
+(this will display name with every product they bought)
+best for sizes and color tables to join all of the sizes and colors together
+
+NOTE:
+
+can also do it this way , 
+
+SELECT
+	c.first_name as customer,
+	p.name AS product
+FROM customers c, orders
+ORDER BY c.first_name.
+
+
+IMPLICIT: ------------------------
+
+SELECT
+	sh.shippers AS shippers
+	p.name AS product
+FROM shippers sh, products p.
+ORDER BY sh.name
+
+
+EXPLICIT: --------------------------
+
+
+SELECT
+	sh.shippers AS shippers
+	p.name AS product
+FROM shippers sh
+CROSS JOIN products p
+ORDER BY sh.name;
+
+<--UNIONS -->
+
+SELECT 
+	order_id,
+	order_date
+	'Active' AS status
+from orders
+WHERE order_date >= '2019-01-01'
+UNION
+SELECT 
+	order_id,
+	order_date
+	'Archived' AS status
+from orders
+WHERE order_date < '2019-01-01'
+
+
+SELECT first_name
+FROM customers
+UNION
+SELECT name
+FROM shippers
+
+practice:
+
+SELECT customer_id, 
+	first_name, 
+	points, 
+	'Bronze' AS type
+FROM customers
+WHERE points <2000
+UNION
+SELECT customer_id, 
+	first_name, 
+	points, 
+	'Silver' AS type
+FROM customers
+WHERE points BETWEEN 2000 AND 3000
+UNION
+SELECT customer_id, 
+	first_name, 
+	points, 
+	'Gold' AS type
+FROM customers
+WHERE points >3000
+ORDER BY first_name
+ 
+<---- COLUMN ATTRIBUTES, INSERT, DELETE ---->
+
+PK = primary key
+NN = not null < determins if column can accept null value
+AI = AUTO increment <- lets sql insert values as they are introduces
+
+<----- inserting rows --->
+
+NOTE: default is the prefered approach for ID's
+
+INSERT INTO customers (
+	first_name,
+	last_name,
+	birth_date,
+	address,
+	city,
+	state)
+VALUE (DEFAULT, 
+	'John', 
+	'Smith'
+	'1990-01-01',
+	NULL, 
+	'ADDRESS',
+	'CITY',
+	'STATE',
+	DEFAULT)
+
+EXERCISE:
+
+INSERT INTO products(name,quantity_in_stock,unit-price)
+VALUES ('SOAP', 10, 1.95),
+	('tooth', 11, 2.00),
+	('hands', 12, 69)
+
+<----- INSERT INTO MULTIPLE TABLES --->
+
+
+INSERT INTO orders (customer_id, order_date, status)
+VALUES 	(1, '2019-01-02', 1); <-- must provide valid input or sql will yell
+
+INSERT INTO order_items  <--- input into child table (subset of orders table)
+VALUES 
+	(LAST_INSERT_ID(), 1, 1, 2.95),
+	(LAST_INSERT_ID(), 2, 1, 3.95)
+
+//SELECT LAST_INSERT_ID() <- OUTPUTS ID OF NEWEST INSERTED RECORD
+
+
+<------------ COPY DATA FROM TABLES TO OTHER TABLES ---------->
+
+CREATE TABLE orders_archived AS 
+SELECT * FROM orders     <-- copys all data from orders but the primary key isnts stored and will ignore attributes
+				// THIS SELECT STATEMENT IS KNOWN AS A SUBQUERY
+
+if you right click and click truncate it will delete all the data in the table
+
+// this acts as a subquery in an inster statement
+INSERT INTO orders_archived()
+SELECT *
+FROM orders
+WHERE orders_date < '2019-01-01'
+
+//now orders_archived has all orders before 2019
+
+EXERCISE:
+
+CREATE INTO invoices_archived AS
+SELECT 
+	c.clients
+	i.invoice_id
+	i.number,
+	c.name AS client,
+	i.invoice_total,
+	i.payment_total,
+	i.invoice_date,  <- only exists in invoice so doesnt have to be prefixed
+	i.payment_date,
+	i.due_date
+FROM invoices 	
+JOIN clients c 
+	USING (client_id) 
+WHERE i.payment_date IS NOT NULL <-- (or where i.payment > 0.00) 
+
+
+<--- update single row ---->
+
+SELECT * FROM sql_invoicing.invoices
+
+UPDATE invoices
+SET payment_total = 10, payment_date = '2019-03-01'
+WHERE invoice_id = 1
+
+UPDATE invoices
+SET payment_total = DEFAULT (or you can use 0), payment_date = NULL
+WHERE invoice_id = 3
+
+UPDATE invoices
+SET 
+    payment_total = invoice_total * 0.5, 
+    payment_date = due_date
+WHERE invoice_id = 3
+
+
+<--- UPDATE MULTIPLE RECORDS --->
+
+SELECT * FROM sql_invoicing.invoices
+
+UPDATE invoices
+SET 
+    payment_total = invoice_total * 0.5, 
+    payment_date = due_date
+WHERE client_id = 3   <-- this will give an error with mySQLworkbench because by default its in safe update mode, only 
+			   a single record can be updated at a time
+
+
+UPDATE invoices
+SET 
+    payment_total = invoice_total * 0.5, 
+    payment_date = due_date
+WHERE invoice_id IN (3, 4)
+
+EXERCISE:
+
+USE sql_store
+
+UPDATE customers
+SET 
+   points = points + 50
+WHERE birth_date < '1990-01-01'
+
+<--------- USING SUBQUERIES IN UPDATES ------>
+
+
+
+UPDATE invoices
+SET 
+    payment_total = invoice_total * 0.5, 
+    payment_date = due_date
+WHERE client_id = 
+
+(SELECT client_id
+FROM clients
+WHERE name = 'Myworks')  <----- this will be used in the upperr where client_id =
+
+--------------------------
+UPDATE invoices
+SET 
+    payment_total = invoice_total * 0.5, 
+    payment_date = due_date
+WHERE client_id IN
+	(SELECT client_id
+	FROM clients
+	WHERE state IN ('CA', 'NY'))
+
+---------------------
+BEST PRACTICE; run query to see which records i should update
+--------------------------
+UPDATE invoices
+SET 
+    payment_total = invoice_total * 0.5, 
+    payment_date = due_date
+SELECT *(
+FROM invoices
+WHERE payment_date IS NULL
+
+exercise:
+
+
+UPDATE orders
+SET 
+   comments = 'Gold Customers'
+WHERE customer_id IN 
+	(SELECT*
+	FROM customers
+	WHERE points > 3000);
+
+
+<------------- DELETING ROWS ---------->
+
+DELETE FROM invoices
+WHERE invoice_id = 1 
+
+find a specific client
+
+
+DELETE FROM invoices
+WHERE invoice_id = (
+SELECT *
+FROM clients
+WHERE name = 'Myworks')
+
+
+<---------- RESTORE DATABASE --------->
+
+go to default directory open create.databases.sql
+
+this will recreate all databases
+then click refresh
+
+
+
+
+
+
+
+
+
+
+
